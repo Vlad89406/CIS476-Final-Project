@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyPass - Dashboard</title>
+</head>
+<body>
+    <h1>MyPass Dashboard</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li><strong>{{ category }}:</strong> {{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% if notifications and notifications|length > 0 %}
+        <h3>Notifications</h3>
+        <ul>
+            {% for msg in notifications %}
+                <li>{{ msg }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h3>Vault</h3>
+    <ul>
+        <li><a href="{{ url_for('vault_logins') }}">Login Items</a></li>
+        <li><a href="{{ url_for('vault_cards') }}">Credit Cards</a></li>
+        <li><a href="{{ url_for('vault_identities') }}">Identities</a></li>
+        <li><a href="{{ url_for('vault_notes') }}">Secure Notes</a></li>
+    </ul>
+
+    <h3>Tools</h3>
+    <ul>
+        <li><a href="{{ url_for('password_generator') }}">Password Generator</a></li>
+    </ul>
+
+    <p><a href="{{ url_for('logout') }}">Logout</a></p>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyPass - Login Items</title>
+</head>
+<body>
+    <h1>Login Items</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li><strong>{{ category }}:</strong> {{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <h3>{% if edit_item %}Edit Login{% else %}Add / Update Login{% endif %}</h3>
+    <form method="POST" {% if edit_item %}action="{{ url_for('edit_login_item', item_id=edit_item.id) }}"{% endif %}>
+        <label>Site Name:</label><br>
+        <input type="text" name="site_name" required value="{{ edit_item.site_name if edit_item else '' }}"><br>
+
+        <label>Username:</label><br>
+        <input type="text" name="username" required value="{{ edit_item.username if edit_item else '' }}"><br>
+
+        <label>Password:</label><br>
+        <input type="text" name="password" required value="{{ edit_item.password if edit_item else '' }}"><br>
+
+        <label>URL:</label><br>
+        <input type="text" name="url" value="{{ edit_item.url if edit_item else '' }}"><br><br>
+
+        <button type="submit">{% if edit_item %}Update Login{% else %}Save Login{% endif %}</button>
+        {% if edit_item %}
+            <a href="{{ url_for('vault_logins') }}">Cancel</a>
+        {% endif %}
+    </form>
+
+    <h3>Saved Logins</h3>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Site</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>URL</th>
+            <th>Actions</th>
+        </tr>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.site_name }}</td>
+            <td>
+                {{ item.username }}
+                <button type="button" onclick="copyAndClear('{{ item.username }}')">Copy</button>
+            </td>
+            <td>
+                <span class="secret" data-full="{{ item.password_full }}" data-state="hidden">
+                    {{ item.password_masked }}
+                </span>
+                <button type="button" onclick="toggleSecret(this)">Show</button>
+                <button type="button" onclick="copyAndClear('{{ item.password_full }}')">Copy</button>
+            </td>
+            <td>
+                <a href="{{ item.url }}" target="_blank">{{ item.url }}</a>
+                {% if item.url %}
+                    <button type="button" onclick="copyAndClear('{{ item.url }}')">Copy URL</button>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{{ url_for('edit_login_item', item_id=item.id) }}">Edit</a>
+                |
+                <form method="POST" action="{{ url_for('delete_login_item', item_id=item.id) }}" style="display:inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+
+    <script>
+        const CLIPBOARD_CLEAR_MS = 10000; // 10 seconds for demo
+
+        function toggleSecret(button) {
+            const span = button.previousElementSibling;
+            const full = span.getAttribute('data-full');
+
+            if (span.getAttribute('data-state') === 'shown') {
+                const len = full.length;
+                const maskedValue = len <= 4 ? '*'.repeat(len) : '*'.repeat(len - 4) + full.slice(-4);
+                span.textContent = maskedValue;
+                span.setAttribute('data-state', 'hidden');
+                button.textContent = 'Show';
+            } else {
+                span.textContent = full;
+                span.setAttribute('data-state', 'shown');
+                button.textContent = 'Hide';
+            }
+        }
+
+        function copyAndClear(text) {
+            if (!navigator.clipboard) {
+                alert("Clipboard API not supported in this browser.");
+                return;
+            }
+            navigator.clipboard.writeText(text).then(function () {
+                console.log("Copied to clipboard, will clear soon.");
+                setTimeout(function () {
+                    navigator.clipboard.writeText("");
+                    console.log("Clipboard cleared.");
+                }, CLIPBOARD_CLEAR_MS);
+            });
+        }
+    </script>
+</body>
+</html>

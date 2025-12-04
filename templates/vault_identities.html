@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyPass - Identities</title>
+</head>
+<body>
+    <h1>Identities</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li><strong>{{ category }}:</strong> {{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <h3>{% if edit_identity %}Edit Identity{% else %}Add Identity{% endif %}</h3>
+    <form method="POST" {% if edit_identity %}action="{{ url_for('edit_identity', ident_id=edit_identity.id) }}"{% endif %}>
+        <label>Full Name:</label><br>
+        <input type="text" name="full_name" required value="{{ edit_identity.full_name if edit_identity else '' }}"><br><br>
+
+        <h4>Passport</h4>
+        <label>Passport Number:</label><br>
+        <input type="text" name="passport_number" value="{{ edit_identity.passport_number if edit_identity else '' }}"><br>
+        <label>Passport expiration Month (MM):</label><br>
+        <input type="text" name="passport_expiration_month" value="{{ edit_identity.passport_expiration_month if edit_identity else '' }}"><br>
+        <label>Passport expiration Year (YYYY):</label><br>
+        <input type="text" name="passport_expiration_year" value="{{ edit_identity.passport_expiration_year if edit_identity else '' }}"><br><br>
+
+        <h4>Driver License</h4>
+        <label>License Number:</label><br>
+        <input type="text" name="license_number" value="{{ edit_identity.license_number if edit_identity else '' }}"><br>
+        <label>License expiration Month (MM):</label><br>
+        <input type="text" name="license_expiration_month" value="{{ edit_identity.license_expiration_month if edit_identity else '' }}"><br>
+        <label>License expiration Year (YYYY):</label><br>
+        <input type="text" name="license_expiration_year" value="{{ edit_identity.license_expiration_year if edit_identity else '' }}"><br><br>
+
+        <h4>Social Security</h4>
+        <label>SSN:</label><br>
+        <input type="text" name="ssn" value="{{ edit_identity.ssn if edit_identity else '' }}"><br><br>
+
+        <button type="submit">{% if edit_identity %}Update Identity{% else %}Save Identity{% endif %}</button>
+        {% if edit_identity %}
+            <a href="{{ url_for('vault_identities') }}">Cancel</a>
+        {% endif %}
+    </form>
+
+    <h3>Saved Identities</h3>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Name</th>
+            <th>Passport</th>
+            <th>License</th>
+            <th>SSN</th>
+            <th>Actions</th>
+        </tr>
+        {% for ident in identities %}
+        <tr>
+            <td>{{ ident.full_name }}</td>
+            <td>
+                {% if ident.passport_masked %}
+                    <span class="secret" data-full="{{ ident.passport_full }}" data-state="hidden">
+                        {{ ident.passport_masked }}
+                    </span>
+                    <button type="button" onclick="toggleSecret(this)">Show</button>
+                    <button type="button" onclick="copyAndClear('{{ ident.passport_full }}')">Copy</button>
+                    <br>
+                    Exp: {{ ident.passport_expiration }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>
+                {% if ident.license_masked %}
+                    <span class="secret" data-full="{{ ident.license_full }}" data-state="hidden">
+                        {{ ident.license_masked }}
+                    </span>
+                    <button type="button" onclick="toggleSecret(this)">Show</button>
+                    <button type="button" onclick="copyAndClear('{{ ident.license_full }}')">Copy</button>
+                    <br>
+                    Exp: {{ ident.license_expiration }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>
+                {% if ident.ssn_masked %}
+                    <span class="secret" data-full="{{ ident.ssn_full }}" data-state="hidden">
+                        {{ ident.ssn_masked }}
+                    </span>
+                    <button type="button" onclick="toggleSecret(this)">Show</button>
+                    <button type="button" onclick="copyAndClear('{{ ident.ssn_full }}')">Copy</button>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>
+                <a href="{{ url_for('edit_identity', ident_id=ident.id) }}">Edit</a>
+                |
+                <form method="POST" action="{{ url_for('delete_identity', ident_id=ident.id) }}" style="display:inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+
+    <script>
+        const CLIPBOARD_CLEAR_MS = 10000;
+
+        function toggleSecret(button) {
+            const span = button.previousElementSibling;
+            const full = span.getAttribute('data-full');
+
+            if (span.getAttribute('data-state') === 'shown') {
+                const len = full.length;
+                const maskedValue = len <= 4 ? '*'.repeat(len) : '*'.repeat(len - 4) + full.slice(-4);
+                span.textContent = maskedValue;
+                span.setAttribute('data-state', 'hidden');
+                button.textContent = 'Show';
+            } else {
+                span.textContent = full;
+                span.setAttribute('data-state', 'shown');
+                button.textContent = 'Hide';
+            }
+        }
+
+        function copyAndClear(text) {
+            if (!navigator.clipboard) {
+                alert("Clipboard API not supported in this browser.");
+                return;
+            }
+            navigator.clipboard.writeText(text).then(function () {
+                console.log("Copied to clipboard.");
+                setTimeout(function () {
+                    navigator.clipboard.writeText("");
+                    console.log("Clipboard cleared.");
+                }, CLIPBOARD_CLEAR_MS);
+            });
+        }
+    </script>
+</body>
+</html>

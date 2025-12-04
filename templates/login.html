@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyPass - Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li><strong>{{ category }}:</strong> {{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <label>Email:</label><br>
+        <input type="email" name="email" required><br><br>
+
+        <label>Master Password:</label><br>
+        <input type="password" name="master_password" required><br><br>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <br>
+    <p><a href="{{ url_for('recover') }}">Forgot master password?</a></p>
+    <p>No account? <a href="{{ url_for('register') }}">Register</a></p>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyPass - Secure Notes</title>
+</head>
+<body>
+    <h1>Secure Notes</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li><strong>{{ category }}:</strong> {{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <h3>{% if edit_note %}Edit Secure Note{% else %}Add Secure Note{% endif %}</h3>
+    <form method="POST" {% if edit_note %}action="{{ url_for('edit_note', note_id=edit_note.id) }}"{% endif %}>
+        <label>Title:</label><br>
+        <input type="text" name="title" required value="{{ edit_note.title if edit_note else '' }}"><br>
+
+        <label>Content:</label><br>
+        <textarea name="content" rows="5" cols="40" required>{{ edit_note.content if edit_note else '' }}</textarea><br><br>
+
+        <button type="submit">{% if edit_note %}Update Note{% else %}Save Note{% endif %}</button>
+        {% if edit_note %}
+            <a href="{{ url_for('vault_notes') }}">Cancel</a>
+        {% endif %}
+    </form>
+
+    <h3>Saved Notes</h3>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Title</th>
+            <th>Content</th>
+            <th>Actions</th>
+        </tr>
+        {% for note in notes %}
+        <tr>
+            <td>{{ note.title }}</td>
+            <td>{{ note.content }}</td>
+            <td>
+                <a href="{{ url_for('edit_note', note_id=note.id) }}">Edit</a>
+                |
+                <form method="POST" action="{{ url_for('delete_note', note_id=note.id) }}" style="display:inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+</body>
+</html>

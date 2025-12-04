@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyPass - Credit Cards</title>
+</head>
+<body>
+    <h1>Credit Cards</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li><strong>{{ category }}:</strong> {{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <h3>{% if edit_card %}Edit Credit Card{% else %}Add Credit Card{% endif %}</h3>
+    <form method="POST" {% if edit_card %}action="{{ url_for('edit_card', card_id=edit_card.id) }}"{% endif %}>
+        <label>Cardholder Name:</label><br>
+        <input type="text" name="cardholder_name" required value="{{ edit_card.cardholder_name if edit_card else '' }}"><br>
+
+        <label>Card Number:</label><br>
+        <input type="text" name="card_number" required value="{{ edit_card.card_number if edit_card else '' }}"><br>
+
+        <label>CVV:</label><br>
+        <input type="text" name="cvv" required value="{{ edit_card.cvv if edit_card else '' }}"><br>
+
+        <label>expiration Month (MM):</label><br>
+        <input type="text" name="expiration_month" required value="{{ edit_card.expiration_month if edit_card else '' }}"><br>
+
+        <label>expiration Year (YYYY):</label><br>
+        <input type="text" name="expiration_year" required value="{{ edit_card.expiration_year if edit_card else '' }}"><br><br>
+
+        <button type="submit">{% if edit_card %}Update Card{% else %}Save Card{% endif %}</button>
+        {% if edit_card %}
+            <a href="{{ url_for('vault_cards') }}">Cancel</a>
+        {% endif %}
+    </form>
+
+    <h3>Saved Cards</h3>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Cardholder</th>
+            <th>Number</th>
+            <th>CVV</th>
+            <th>expiration</th>
+            <th>Actions</th>
+        </tr>
+        {% for card in cards %}
+        <tr>
+            <td>{{ card.cardholder_name }}</td>
+            <td>
+                <span class="secret" data-full="{{ card.card_number_full }}" data-state="hidden">
+                    {{ card.card_number_masked }}
+                </span>
+                <button type="button" onclick="toggleSecret(this)">Show</button>
+                <button type="button" onclick="copyAndClear('{{ card.card_number_full }}')">Copy</button>
+            </td>
+            <td>
+                <span class="secret" data-full="{{ card.cvv_full }}" data-state="hidden">
+                    {{ card.cvv_masked }}
+                </span>
+                <button type="button" onclick="toggleSecret(this)">Show</button>
+                <button type="button" onclick="copyAndClear('{{ card.cvv_full }}')">Copy</button>
+            </td>
+            <td>{{ card.expiration }}</td>
+            <td>
+                <a href="{{ url_for('edit_card', card_id=card.id) }}">Edit</a>
+                |
+                <form method="POST" action="{{ url_for('delete_card', card_id=card.id) }}" style="display:inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+
+    <script>
+        const CLIPBOARD_CLEAR_MS = 10000; // 10 seconds
+
+        function toggleSecret(button) {
+            const span = button.previousElementSibling;
+            const full = span.getAttribute('data-full');
+
+            if (span.getAttribute('data-state') === 'shown') {
+                const len = full.length;
+                const maskedValue = len <= 4 ? '*'.repeat(len) : '*'.repeat(len - 4) + full.slice(-4);
+                span.textContent = maskedValue;
+                span.setAttribute('data-state', 'hidden');
+                button.textContent = 'Show';
+            } else {
+                span.textContent = full;
+                span.setAttribute('data-state', 'shown');
+                button.textContent = 'Hide';
+            }
+        }
+
+        function copyAndClear(text) {
+            if (!navigator.clipboard) {
+                alert("Clipboard API not supported in this browser.");
+                return;
+            }
+            navigator.clipboard.writeText(text).then(function () {
+                console.log("Copied to clipboard, will clear soon.");
+                setTimeout(function () {
+                    navigator.clipboard.writeText("");
+                    console.log("Clipboard cleared.");
+                }, CLIPBOARD_CLEAR_MS);
+            });
+        }
+    </script>
+</body>
+</html>
